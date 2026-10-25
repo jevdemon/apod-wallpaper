@@ -1,0 +1,16 @@
+# Runtime output (the script writes to %LOCALAPPDATA%, but just in case)
+*.log
+*.part
+apod-*.jpg
+apod-*.png
+apod-*.gif
+today.txt
+last-alert.txt
+
+# OS / editor clutter
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+*.swp
+*~
