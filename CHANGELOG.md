@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.0 (2026-10-29)
+
+- On video days, shows an informational popup saying the wallpaper will stay the same, instead of skipping silently. Shares the once-per-day popup limit with failure alerts.
+
 ## 1.0.0 (2026-10-25)
 
 Initial release.

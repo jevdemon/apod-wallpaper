@@ -16,7 +16,7 @@ If your APOD wallpaper stopped updating, or turned into the NASA logo, this scri
 - Reads today's APOD page at `science.nasa.gov/apod` and downloads the full-size image.
 - If the page can't be parsed, it falls back to the official APOD RSS feed. The feed may lag a day or two, but it beats nothing.
 - Every download is checked. It must be an actual image larger than 30 KB, so a logo or error page never becomes your wallpaper.
-- On days when APOD is a video, your current wallpaper is left alone.
+- On days when APOD is a video, your current wallpaper is left alone and a popup lets you know.
 - If something breaks (site down, page layout changed again), you get a popup, at most once per day, with an option to open the log.
 
 ## Requirements
@@ -119,14 +119,14 @@ Everything the script creates lives in `%LOCALAPPDATA%\APODWallpaper`:
 | `apod-YYYY-MM-DD.jpg` | Downloaded pictures, pruned after `-KeepDays` |
 | `today.txt` | Title, date, link, and explanation for the current picture |
 | `apod.log` | One line per run. Check here first if something seems off |
-| `last-alert.txt` | Date of the last popup, used to limit popups to one per day |
+| `last-alert.txt` | Date of the last popup (failure or video-day notice), used to limit popups to one per day |
 
 ## Troubleshooting
 
 **The wallpaper didn't change.**
 Open `%LOCALAPPDATA%\APODWallpaper\apod.log`. The last few lines will say what happened. Common causes:
 
-- Today's APOD is a video. That's expected; the log will say so.
+- Today's APOD is a video. That's expected; you'll get a popup saying so, and the log notes it too.
 - Your background is set to Spotlight or Slideshow (see step 5).
 - The network wasn't up yet. The task retries at the next trigger.
 

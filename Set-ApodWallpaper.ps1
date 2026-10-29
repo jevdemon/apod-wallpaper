@@ -10,7 +10,8 @@
 
   Every download is validated (must be an image and larger than 30 KB) so a logo
   or error page never becomes your wallpaper. If the page layout changes again,
-  a popup tells you (at most once per day). Video days are skipped silently.
+  a popup tells you (at most once per day). On video days the wallpaper is left
+  unchanged and a popup says so.
 
   Files are kept in %LOCALAPPDATA%\APODWallpaper:
     apod-YYYY-MM-DD.jpg   downloaded images (pruned after -KeepDays)
@@ -18,7 +19,7 @@
     apod.log              one line per run (check here if something fails)
 
   Project: https://github.com/jevdemon/apod-wallpaper
-  Version: 1.0.0   License: MIT
+  Version: 1.1.0   License: MIT
 
 .EXAMPLE
   .\Set-ApodWallpaper.ps1 -Verbose         # run once now
@@ -55,22 +56,32 @@ function Write-Log([string]$Message) {
     Write-Verbose $Message
 }
 
-# Pops a warning MessageBox in a separate process so the scheduled task can finish.
-# At most one popup per day (unless -TestAlert), so 7 AM + logon failures don't double up.
-function Show-Alert([string]$Message) {
-    Write-Log "ALERT: $($Message -replace '\s+', ' ')"
+# Pops a MessageBox in a separate process so the scheduled task can finish.
+# At most one popup per day (unless -TestAlert), so 7 AM + logon runs don't double up.
+# -Info shows a plain OK box with an info icon instead of the warning + "Open the log?" prompt.
+function Show-Alert([string]$Message, [switch]$Info) {
+    $kind = if ($Info) { 'INFO' } else { 'ALERT' }
+    Write-Log "${kind}: $($Message -replace '\s+', ' ')"
     $stamp = Join-Path $Dir 'last-alert.txt'
     $today = Get-Date -Format 'yyyy-MM-dd'
     if (-not $TestAlert -and (Test-Path $stamp) -and ((Get-Content $stamp -Raw).Trim() -eq $today)) { return }
     Set-Content -Path $stamp -Value $today
 
-    $msg  = ($Message + "`n`nOpen the log?") -replace "'", "''"
-    $logq = $Log -replace "'", "''"
-    $cmd = @"
+    if ($Info) {
+        $msg = $Message -replace "'", "''"
+        $cmd = @"
+Add-Type -AssemblyName System.Windows.Forms
+[System.Windows.Forms.MessageBox]::Show('$msg', 'APOD Wallpaper', 'OK', 'Information', 'Button1', 'DefaultDesktopOnly') | Out-Null
+"@
+    } else {
+        $msg  = ($Message + "`n`nOpen the log?") -replace "'", "''"
+        $logq = $Log -replace "'", "''"
+        $cmd = @"
 Add-Type -AssemblyName System.Windows.Forms
 `$r = [System.Windows.Forms.MessageBox]::Show('$msg', 'APOD Wallpaper', 'YesNo', 'Warning', 'Button1', 'DefaultDesktopOnly')
 if (`$r -eq 'Yes') { Start-Process notepad.exe '$logq' }
 "@
+    }
     $enc = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($cmd))
     Start-Process powershell.exe -WindowStyle Hidden -ArgumentList "-NoProfile -EncodedCommand $enc"
 }
@@ -248,7 +259,7 @@ try {
     }
 
     if (-not $apod -and -not $alert -and $script:PageHasVideo) {
-        Write-Log 'Today''s APOD is a video. Wallpaper unchanged.'
+        Show-Alert -Info "Today's Astronomy Picture of the Day is a video, so your current desktop wallpaper will stay the same."
         exit 0
     }
     if (-not $apod -and -not $alert) {
